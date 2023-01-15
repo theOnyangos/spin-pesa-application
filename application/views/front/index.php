@@ -315,7 +315,7 @@ $phone = '';
 						<ul class="nav navbar-nav m-auto menu-inner fa-time">
 							<li><a href="#banner" class="active">Spin Now</a></li>
 							<li><a href="#how">How to play</a></li>
-							<li><a href="<?= base_url() ?>/blog/">Blog</a></li>
+							<li><a href="<?= base_url() ?>blog/">Blog</a></li>
 							<li><a href="#contact">Contact</a> </li>
 							
 							<?php
@@ -400,7 +400,7 @@ $phone = '';
             <ul>
                 <li><a  style="padding: 4px; font-size: 14px;" href="#banner" class="active">Spin Now</a></li>
 				<li><a  style="padding: 4px; font-size: 14px;" href="#how">How to Play</a></li>
-				<li><a style="padding: 4px; font-size: 14px;" href="<?= base_url() ?>/blog/">Blog</a></li>
+				<li><a style="padding: 4px; font-size: 14px;" href="<?= base_url() ?>blog/">Blog</a></li>
 				<li><a style="padding: 4px; font-size: 14px;" href="#contact">Contact</a> </li>
 				<?php
                 if(isset($_SESSION['logged_in_user'])){

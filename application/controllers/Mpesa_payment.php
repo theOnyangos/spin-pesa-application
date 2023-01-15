@@ -26,7 +26,14 @@ class Mpesa_payment extends CI_Controller {
 	}
 
 	function index() {
-		echo $this->get_mpesa_access_token();
+		$phone = $_SESSION['logged_in_user'];
+		// $this->db->select('*');
+		// $this->db->from('clients');
+		// $this->db->where(array('client_phone_num' => $phone));
+		// $this->db->update('clients', array('client_wallet_bal' => 150));
+
+		$clientData = $this->db->get_where('clients', array('client_phone_num' => $phone))->row_array();
+		echo json_encode($clientData);
 	}
 
 	function get_mpesa_access_token()
@@ -83,12 +90,13 @@ class Mpesa_payment extends CI_Controller {
             $checkoutRequestID = $res->message->CheckoutRequestID;
             $customerMessage = $res->message->CustomerMessage;
 			$paymentData = array(
-				'phone_number' => $phone,
+				'phone' => $phone,
 				'amount' => $amount,
 				'reference' => $this->accountReference,
-				'description' => $this->transactionDesc,
-				'merchant_request_id' => $merchantRequestID,
-				'checkout_request_id' => $checkoutRequestID,
+				// 'user_id' => $this->session->userdata('logged_in_user'),
+				'ResponseDescription' => $this->transactionDesc,
+				'MerchantRequestID' => $merchantRequestID,
+				'CheckoutRequestID' => $checkoutRequestID,
 				'payment_status' => "Requested",
 			);
 			$this->Mpesa_model->save_payment_details((array)$paymentData);
