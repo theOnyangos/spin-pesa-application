@@ -105,7 +105,7 @@ class Mpesa_payment extends CI_Controller {
 	}
 
 	// Calculate the amount to update the client's wallet
-	function update_users_wallet($phone, $amount) 
+	function update_users_wallet($phone="0725134449", $amount=5) 
 	{
 		$this->Mpesa_model->culculate_amount($phone, $amount);
 	}

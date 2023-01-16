@@ -65,7 +65,10 @@ class Mpesa_model extends CI_Model {
 			$amount_in_account = $query->row()->client_wallet_bal;
 			// Calculate the amount and update the wallet
 			$totalAmount = $amount_in_account + $amount;
-			return $totalAmount;
+			// Update the clients table
+			$this->db->where('client_phone_num', $phone);
+			$this->db->update($this->clients_table, array('client_wallet_bal' => $totalAmount));
+			echo $totalAmount;
 		} else {
 			return false;
 		}
