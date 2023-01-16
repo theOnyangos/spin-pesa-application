@@ -11,9 +11,10 @@ class Mpesa_payment extends CI_Controller {
 	private $passKey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
 	private $businessShortCode = 174379; // Can be the business store number
 	private $transactionType = "CustomerPayBillOnline";
-	private $callBackUrl ="https://spin-pesa.com/index.php";
+	private $callBackUrl ="https://90fc-197-237-202-136.eu.ngrok.io/spin-pessa/Mpesa_payment/stk_callback";
 	private $accountReference = "Spin Pesa";
 	private $transactionDesc = "Adding money to my wallet";
+	private $payments_table = "payments";
 
 	function __construct()
 	{
@@ -83,21 +84,20 @@ class Mpesa_payment extends CI_Controller {
 
 		$res = $this->getCurlSetting($this->mpesa_express_endpoint, $datapayload, $token);
 		$response = json_decode($res);
-		$res = $response->data;
-		$responseCode = $res->message->ResponseCode;
-		if ($responseCode === 0) { // The request was successful
-			$merchantRequestID = $res->message->MerchantRequestID;
-            $checkoutRequestID = $res->message->CheckoutRequestID;
-            $customerMessage = $res->message->CustomerMessage;
+		$responseCode = $response->ResponseCode;
+		if ($responseCode == 0) { // The request was successful
+			$merchantRequestID = $response->MerchantRequestID;
+            $checkoutRequestID = $response->CheckoutRequestID;
+            $customerMessage = $response->CustomerMessage;
 			$paymentData = array(
+				// 'id' => $this->generate_transaction_number(),
 				'phone' => $phone,
 				'amount' => $amount,
-				'reference' => $this->accountReference,
-				// 'user_id' => $this->session->userdata('logged_in_user'),
+				'account_reference' => $this->accountReference,
 				'ResponseDescription' => $this->transactionDesc,
 				'MerchantRequestID' => $merchantRequestID,
 				'CheckoutRequestID' => $checkoutRequestID,
-				'payment_status' => "Requested",
+				'CustomerMessage' => "Requested",
 			);
 			$this->Mpesa_model->save_payment_details((array)$paymentData);
 			return $customerMessage;
@@ -108,8 +108,40 @@ class Mpesa_payment extends CI_Controller {
 
 	// get STK Callback after the payment has been processed from safaricom
 	function stk_callback() {
-		$data = file_get_contents("php://input");
-		write_file('./stk_data.txt', $data);
+		$data = json_decode(file_get_contents('php://input'), true);
+
+		$response = json_decode($data);
+		$this->Mpesa_model->update_payment_details($response);
+	}
+
+	function generate_transaction_number()
+    {
+        // Get the last waybill number
+        $this->db->select('id');
+        $this->db->from($this->payments_table);
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $last_waybill = $query->row()->waybill_number;
+            $last_four_digits = substr($last_waybill, -4);
+            $last_four_digits = (int) $last_four_digits;
+            $last_four_digits = $last_four_digits + 1;
+            $last_four_digits = (string) $last_four_digits;
+            $last_four_digits_length = strlen($last_four_digits);
+            if ($last_four_digits_length < 4) {
+                $diff = 4 - $last_four_digits_length;
+                for ($i = 0; $i < $diff; $i++) {
+                    $last_four_digits = '0' . $last_four_digits;
+                }
+            }
+            $first_four_digits = substr($last_waybill, 0, 4);
+            $waybill = $first_four_digits . $last_four_digits;
+            return $waybill;
+        } else {
+            return '10000001';
+        }
 	}
 
 	//initializing curl
@@ -128,18 +160,10 @@ class Mpesa_payment extends CI_Controller {
 		$response = curl_exec($curl);
 		$error = curl_error($curl);
 		if ($error) {
-			$respons = array(
-					"status" => "error",
-				);
-			$res = json_encode($respons);
+			return $error;
 		} else {
-			$respons = array(
-					"status" => "success",
-					"data" => json_decode($response)
-				);
-			$res = json_encode($respons);
+			return $response;
 		}
-		return $res;
 	}
 
 	function getAccessToken()

@@ -89,7 +89,7 @@ $autoload['drivers'] = array();
 |
 |	$autoload['helper'] = array('url', 'file');
 */
-$autoload['helper'] = array('url', 'mysqli', 'general', 'respect_validation');
+$autoload['helper'] = array('file', 'url', 'mysqli', 'general', 'respect_validation');
 
 /*
 | -------------------------------------------------------------------
