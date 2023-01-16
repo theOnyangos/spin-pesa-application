@@ -1,7 +1,7 @@
 <?php
 
 class Mpesa_model extends CI_Model {
-	private $payments_table = 'deposits2';
+	private $payments_table = 'payments';
 
 	function save_payment_details($paymentData) {
 		$this->db->insert($this->payments_table, $paymentData);
@@ -25,8 +25,27 @@ class Mpesa_model extends CI_Model {
         }
 	}
 
-	function update_details($payment_status, $transactionDate, $mpesaReciptNumber, $resultDescription)
+	function update_details($payment_status, $merchantRequestID, $checkoutRequestID, $resultDescription, $amount, $mpesaReciptNumber)
 	{
-
+		if (!empty($paymentStatus) && !empty($merchantRequestID) && !empty($mpesaReciptNumber)) {
+			$payloadData = array(
+				'payment_status' => $payment_status,
+				'merchant_request_id' => $merchantRequestID,
+				'checkout_request_id' => $checkoutRequestID,
+				'result_description' => $resultDescription,
+				'amount' => $amount,
+				'mpesa_recipt_number' => $mpesaReciptNumber
+			);
+			$this->db->insert($this->payments_table, $payloadData);
+			return true;
+		} else {
+			$payloadData = array(
+				'checkout_request_id' => $checkoutRequestID,
+				'result_description' => $resultDescription,
+				'amount' => $amount,
+			);
+			$this->db->insert($this->payments_table, $payloadData);
+			return true;
+		}
 	}
 }

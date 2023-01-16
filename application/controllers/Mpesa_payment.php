@@ -91,13 +91,13 @@ class Mpesa_payment extends CI_Controller {
             $customerMessage = $response->CustomerMessage;
 			$paymentData = array(
 				// 'id' => $this->generate_transaction_number(),
-				'phone' => $phone,
+				'phone_number' => $phone,
 				'amount' => $amount,
 				'account_reference' => $this->accountReference,
-				'ResponseDescription' => $this->transactionDesc,
-				'MerchantRequestID' => $merchantRequestID,
-				'CheckoutRequestID' => $checkoutRequestID,
-				'CustomerMessage' => "Requested",
+				'response_description' => $this->transactionDesc,
+				'merchant_request_id' => $merchantRequestID,
+				'checkout_request_id' => $checkoutRequestID,
+				'customer_message' => "Requested",
 			);
 			$this->Mpesa_model->save_payment_details((array)$paymentData);
 			return $customerMessage;
