@@ -26,17 +26,6 @@ class Mpesa_payment extends CI_Controller {
 		$this->endpoint = $this->config->item('endpoint');
 	}
 
-	function index() {
-		$phone = $_SESSION['logged_in_user'];
-		// $this->db->select('*');
-		// $this->db->from('clients');
-		// $this->db->where(array('client_phone_num' => $phone));
-		// $this->db->update('clients', array('client_wallet_bal' => 150));
-
-		$clientData = $this->db->get_where('clients', array('client_phone_num' => $phone))->row_array();
-		echo json_encode($clientData);
-	}
-
 	function get_mpesa_access_token()
 	{
 		$client = new Client();
@@ -107,11 +96,18 @@ class Mpesa_payment extends CI_Controller {
 	}
 
 	// get STK Callback after the payment has been processed from safaricom
-	function stk_callback() {
+	function stk_callback() 
+	{
 		$data = json_decode(file_get_contents('php://input'), true);
 
 		$response = json_decode($data);
 		$this->Mpesa_model->update_payment_details($response);
+	}
+
+	// Calculate the amount to update the client's wallet
+	function update_users_wallet($phone, $amount) 
+	{
+		$this->Mpesa_model->culculate_amount($phone, $amount);
 	}
 
 	function generate_transaction_number()
