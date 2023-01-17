@@ -63,15 +63,10 @@ class Users extends CI_Controller {
 	function deposits(){
 	    $this->load->model("admin_dashboard_model");
 	    $this->load->model("users_model");
-
-	    
 	    //get all userse
-	    
 	    $users = $this->users_model->get_users();
-	    
 	    //get all deposits
 	    $all_deposits = $this->users_model->get_all_deposits();
-	    
 
 	    $data['users'] = $users;
 	    $data['all_deposits'] = $all_deposits;

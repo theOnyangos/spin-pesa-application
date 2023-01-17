@@ -55,41 +55,51 @@
                                         <table id="datatable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
                                             <thead>
                                                 <tr>
-                                                    <th>Trans ID</th>
                                                     <th>Mpesa Transaction ID</th>
                                                     <th>Name</th>
                                                     <th>Phone</th>
                                                     <th>Amount</th>
                                                     <th>Date</th>
                                                     <th>Time</th>
+                                                    <th>Reason</th>
                                                     <th>Status</th>
+                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
     
                                             <tbody>
                                                 <?php
                                                     foreach($all_deposits as $deposit){
-                                                        $depo_status ="UNKNOWN";
-                                                        $depo_class = "text-info";
-                                                        if($deposit["status_id"] == 1){
-                                                            $depo_status = "PENDING";
-                                                            $depo_class = "text-warning";
-                                                        }else if($deposit["status_id"] == 2){
-                                                            $depo_status = "COMPLETE";
-                                                            $depo_class = "text-success";
-                                                        }else{
-                                                            
-                                                        }
+														$clientPhone = str_replace('254', '0', $deposit['phone_number']);
+														// Get client name from the clients table
+														$clientData = $this->db->get_where('clients', array('client_phone_num' => $clientPhone))->row_array();
+														// Prepare date and time
+														$date = strtotime($deposit['created_at']);
+														$transDate = date('m-d-Y', $date);
+														$transTime = date('g:i a', $date);
                                                         ?>
                                                         <tr>
-                                                            <td><?php echo $deposit["id"];?></td>
-                                                            <td><?php echo $deposit["MerchantRequestID"];?></td>
-                                                            <td><?php echo $deposit["client_name"];?></td>
-                                                            <td><?php echo $deposit["phone"];?></td>
-                                                            <td><?php echo $deposit["amount"];?></td>
-                                                            <td><?php echo $deposit["created_at"];?></td>
-                                                            <td></td>
-                                                            <td class="<?php echo $depo_class;?>"><?php echo $depo_status;?></td>
+															<td><?php echo $deposit["merchant_request_id"];?></td>
+                                                            <td><?php echo $clientData["client_name"];?></td>
+                                                            <td><?php echo $clientPhone;?></td>
+                                                            <td><?php echo number_format($deposit["amount"],2);?></td>
+                                                            <td><?php echo $transDate;?></td>
+                                                            <td><?php echo $transTime;?></td>
+                                                            <td class="col-3"><?php echo $deposit["result_description"];?></td>
+															<?php if ($deposit['customer_message'] == 'Requested'): ?>
+                                                            <td class="text-warning">REQUESTED</td>
+															<?php elseif ($deposit['customer_message'] == 'Failed'):?>
+																<td class="text-danger">FAILED</td>
+															<?php elseif ($deposit['customer_message'] == 'Paid'):?>
+																<td class="text-success">SUCCESSFULL</td>
+															<?php endif; ?>
+															<td>
+																<?php if (empty($deposit["result_description"])): ?>
+																<button type="button" onclick="validatePayment(this)" class="btn btn-success btn-sm" data-url="<?= site_url('mpesa_payment/validate_payment') ?>" data-id="<?= $deposit['checkout_request_id']?>">Confirm Payment</button>
+																<?php else: ?>
+																	<button type="button" disabled class="btn btn-warning">Confirmed</button>
+																	<?php endif; ?>
+															</td>
                                                         </tr>
                                                         <?php
                                                     } //end foreach
@@ -158,6 +168,32 @@
 
         <!-- App js -->
         <script src="<?php echo base_url();?>assets/js/app.min.js"></script>
+
+		<script>
+			function validatePayment(d) {
+				const url = d.getAttribute('data-url');
+				const checkoutRequestId = d.getAttribute('data-id');
+				const data = { CheckoutRequestID: checkoutRequestId };
+				$.ajax({
+					url: url,
+					type: 'POST',
+					dataType: 'json',
+					data: data,
+					beforeSend: function () {
+						$(d).attr('disabled', true)
+						$(d).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Validating...')
+					}, 
+					success: function(data) {
+						if (data.status == 'success') {
+							window.location.reload();
+						}
+					},
+					error: function (jqXHR, textStatus, errorThrown) {
+						alert('There was some error performing check');
+					}
+				})
+			}
+		</script>
 
     </body>
 

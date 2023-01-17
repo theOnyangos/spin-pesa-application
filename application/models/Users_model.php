@@ -1,21 +1,13 @@
 <?php
 class Users_model extends CI_Model {
     
+	private $payments_table = "payments";
+
     function get_all_deposits(){
-		$mysqli = get_mysqli();
-		$sql = "SELECT deposits2.*, clients.client_name FROM deposits2 LEFT JOIN clients ON clients.client_id = deposits2.user_id ORDER BY created_at DESC LIMIT 0, 1000";
-       
-       if(!$result = $mysqli->query($sql)){
-            die('Unable to run  query. There was an error running the query [' . $mysqli->error . ']');
-        }
-		$data = array();
-		while($row = mysqli_fetch_array($result,MYSQLI_ASSOC)){
-			//var_dumb($row);
-			//print_r($row);
-			array_push($data, $row);
-		}
-        
-        return $data;
+		$this->db->select('*');
+		$this->db->from($this->payments_table);
+		$query = $this->db->get();
+		return $query->result_array();
     }
     
     
