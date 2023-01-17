@@ -3,6 +3,7 @@
 class Mpesa_model extends CI_Model {
 	private $payments_table = 'payments';
 	private $clients_table = 'clients';
+	private $mpesa_settings_table = 'mpesa_settings';
 
 	function save_payment_details($paymentData) {
 		$this->db->insert($this->payments_table, $paymentData);
@@ -130,5 +131,14 @@ class Mpesa_model extends CI_Model {
 			$this->db->update($this->payments_table, array('customer_message' => 'Failed', 'result_description' => $message));
 			return true;
 		}
+	}
+
+	function update_mpesa_settings($payloadData) 
+	{
+		$this->db->select('*');
+		$this->db->where('id', 1);
+		$this->db->update($this->mpesa_settings_table, $payloadData);
+		return true;
+
 	}
 }

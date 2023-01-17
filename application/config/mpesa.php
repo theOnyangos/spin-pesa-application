@@ -10,8 +10,28 @@ if (!defined('BASEPATH')) {
     exit('No direct script access allowed');
 }
 
+$ci =& get_instance();
+$ci->load->database();
+
+// Get Mpesa configuration files from database
+$ci->db->select('*');
+$ci->db->from('mpesa_settings');
+$ci->db->where('id', 1);
+$query = $ci->db->get()->row();
+
+	$BusinessShortCode = $query->businessShortCode;
+	$PartyB = $query->partyB;
+	$AccountReference = $query->accountReference;
+	$PassKey = $query->passKey;
+	$ConsumerKey = $query->ConsumerKey;
+	$SecretKey = $query->SecretKey;
+
+
 $config = array(
-	'consumer_key' => 'GbGAWoMVfGRWVaw6nVNlKi0tpU5scGBU',
-	'consumer_secret' => 'TlQL3a3frGRbf0sT',
-	'endpoint' => 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+	'consumer_key' => $ConsumerKey,
+	'consumer_secret' => $SecretKey,
+	'partyB' => $PartyB,
+	'businessSortCode' => $BusinessShortCode,
+	'passKey' => $PassKey,
+	'accountReference' => $AccountReference,
 );

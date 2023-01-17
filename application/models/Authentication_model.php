@@ -127,7 +127,7 @@ class Authentication_model extends CI_Model {
 		$saved_pass = "";
 		$name = "";
 		$email = filter_var($form_data["email"], FILTER_SANITIZE_EMAIL);
-		$password = filter_var($form_data["password"], FILTER_SANITIZE_STRING);
+		$password = filter_var($form_data["password"], FILTER_UNSAFE_RAW);
 		
 		$mysqli = get_mysqli();
 		$sql = "SELECT * FROM admin WHERE admin_email = '$email' ";

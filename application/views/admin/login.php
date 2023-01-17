@@ -116,7 +116,7 @@
                     $("#submit-btn").prop("disabled", false);
             		}
             		if (obj.code == 2) {
-            		   window.location.href = "<?php echo 'https://spin-pesa.com/index.php/admin'; ?>";
+            		   window.location.href = "<?= base_url('admin'); ?>";
             		  
             		  $("#submit-btn").html('Verified');
             		  $("#submitbtn_spin").html('');		

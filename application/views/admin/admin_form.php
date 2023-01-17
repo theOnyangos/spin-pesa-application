@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<?php 
+	// Get Mpesa Settings from the database
+	$mpesa_settings = $this->db->get_where('mpesa_settings', ['id' => 1])->row();
+	$BussinessShortCode = $mpesa_settings->businessShortCode;
+	$PartyB = $mpesa_settings->partyB;
+	$AccountReference = $mpesa_settings->accountReference;
+	$PassKey = $mpesa_settings->passKey;
+	$ConsumerKey = $mpesa_settings->ConsumerKey;
+	$SecretKey = $mpesa_settings->SecretKey;
+?>
+
     <head>
         <meta charset="utf-8" />
         <title>User VIew</title>
@@ -50,10 +61,6 @@
 
                         <!-- start  -->
                         <div class="row">
-
-
-                            
-                            
                              <div class="col-lg-6">
                                 <div class="mt-5">
                                     <h4 class="header-title mb-3">Login</h4>
@@ -81,6 +88,68 @@
                                                        Update
                                                     </button>
                                                     <div id="output2"></div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end row -->
+
+                        <!-- start  -->
+                        <div class="row">
+                             <div class="col-lg-6">
+                                <div class="mt-5">
+                                    <h4 class="header-title mb-3">Mpesa Payment Settings</h4>
+                                    <p class="sub-header">
+                                        Mpesa Activation Details
+                                    </p>
+
+                                    <div class="mb-4">
+                                        <form class="form-validation" id="updateMpesaSettings">
+                                            <div class="form-group row">
+                                                <label for="inputEmail3" class="col-md-4 form-control-label">Store Number<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text"  class="form-control" name="business_code"  placeholder="" value="<?= $BussinessShortCode ?>">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="inputEmail3" class="col-md-4 form-control-label">Pay Bill/Till Number<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text"  class="form-control" name="party_b"  placeholder="" value="<?= $PartyB ?>">
+                                                </div>
+                                            </div>
+											<div class="form-group row">
+                                                <label for="inputEmail3" class="col-md-4 form-control-label">Account Reference<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text"  class="form-control" name="account_reference"  placeholder="" value="<?= $AccountReference ?>">
+                                                </div>
+                                            </div>
+											<div class="form-group row">
+                                                <label for="inputEmail3" class="col-md-4 form-control-label">Mpesa Pass-Key<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text"  class="form-control" name="pass_key"  placeholder="" value="<?= $PassKey ?>">
+                                                </div>
+                                            </div>
+											<div class="form-group row">
+                                                <label for="inputEmail3" class="col-md-4 form-control-label">Consumer Key<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text"  class="form-control" name="consumer_key"  placeholder="" value="<?= $ConsumerKey ?>">
+                                                </div>
+                                            </div>
+											<div class="form-group row">
+                                                <label for="inputEmail3" class="col-md-4 form-control-label">Secret Key<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text"  class="form-control" name="secret"  placeholder="" value="<?= $SecretKey ?>">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row justify-content-end">
+                                                <div class="col-md-8">
+                                                    <button type="submit" class="btn btn-warning waves-effect waves-light mr-1" id="update_Mpesa_settings">
+                                                       Update
+                                                    </button>
+                                                    <div id="output3"></div>
                                                 </div>
                                             </div>
                                         </form>
@@ -169,6 +238,34 @@
         } //end of swal disabled
         
     	$(document).ready(function(){
+			//============================================================ Handle Mpesa Settings Update =========================================//
+			$("#update_Mpesa_settings").click(function(e) {
+				e.preventDefault();
+				const form = $("#updateMpesaSettings");
+				const payloadData = form.serialize();
+				const url = '<?= site_url('admin/dashboard/update_mpesa_detsils') ?>'
+				$.ajax({
+					url: url,
+					type: 'POST',
+					dataType: 'JSON',
+					data: payloadData,
+					beforeSend: function() {
+						$("#update_Mpesa_settings").attr('disabled', true);
+						$("#update_Mpesa_settings").append('<div class="spinner-border text-light"></div>');
+					},
+					success: function(data) {
+						if (data.status == 'success') {
+							$("#update_Mpesa_settings").attr('disabled', false);
+    		  				$("#update_Mpesa_settings").html('Update');		
+    		  				$("#output3").append('<div class="alert alert-success">'+
+                                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">×</span> </button>'+
+                                                '<h4 class="text-success"><i class="fa fa-exclamation-circle"></i> Successfully Updated</h4> '+
+                                            '</div>');
+						}
+					}
+				});
+				
+			})
     	    
 
           //============================================================handle user pass details update=========================================//

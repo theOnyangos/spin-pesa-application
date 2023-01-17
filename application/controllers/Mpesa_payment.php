@@ -8,11 +8,13 @@ class Mpesa_payment extends CI_Controller {
 	private $consumer_secret;
 	private $endpoint;
 	private $mpesa_express_endpoint = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest";
-	private $passKey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-	private $businessShortCode = 174379; // Can be the business store number
+	private $token_endpoint = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
+	private $passKey;
+	private $partyB;
+	private $businessShortCode; // Can be the business store number
 	private $transactionType = "CustomerPayBillOnline";
-	private $callBackUrl ="https://c627-197-237-202-136.eu.ngrok.io/spin-pessa/callback_data";
-	private $accountReference = "Spin Pesa";
+	private $callBackUrl ="https://spinpesa.programmer.co.ke/callback_response";
+	private $accountReference;
 	private $transactionDesc = "Adding money to my wallet";
 	private $stkQueryEndpoint = "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query";
 	private $payments_table = "payments";
@@ -24,17 +26,29 @@ class Mpesa_payment extends CI_Controller {
 		$this->load->config('mpesa');
 		$this->consumer_key = $this->config->item('consumer_key');
 		$this->consumer_secret = $this->config->item('consumer_secret');
-		$this->endpoint = $this->config->item('endpoint');
+		$this->passKey = $this->config->item('passKey');
+		$this->businessShortCode = $this->config->item('businessSortCode');
+		$this->accountReference = $this->config->item('accountReference');
+		$this->partyB = $this->config->item('partyB');
 	}
 
 	function index() {
-		echo $this->callBackUrl;
+		$settingsArray = [
+			'consumer_key' => $this->consumer_key,
+			'consumerSecret' => $this->consumer_secret,
+			'passKey' => $this->passKey,
+			'businessShortCode' => $this->businessShortCode,
+			'accountReference' => $this->accountReference,
+			'partyB' => $this->partyB,
+			'token' => $this->get_mpesa_access_token()
+		];
+		echo json_encode($settingsArray);
 	}
 
 	function get_mpesa_access_token()
 	{
 		$client = new Client();
-		$res = $client->request('GET', $this->endpoint, [
+		$res = $client->request('GET', $this->token_endpoint, [
 			'auth' => [$this->consumer_key, $this->consumer_secret]
 		]);
 		$response = json_decode($res->getBody());
@@ -63,7 +77,7 @@ class Mpesa_payment extends CI_Controller {
 		$phone_number = $phone;
 		$timestamp = date('YmdHis');
 		$partyA = $phone_number;
-		$partyB = 174379;
+		$partyB = $this->partyB;
 		$password = base64_encode($this->businessShortCode.$this->passKey.$timestamp);
 		$datapayload = [
 			'BusinessShortCode' => $this->businessShortCode,

@@ -1033,7 +1033,7 @@ $phone = '';
                       A request has been sent to your phone. Please wait for Mpesa prompt to deposit then click button below after deposit confirmation from Mpesa.
                     </div>
                     <p class="wait" style="color:#2d1919;"><b>Please wait as deposit loads</b></p>
-                    <div class="counteer">Confirm Deposit in 40Secs.. <span class="countdown"></span> </div>
+                    <div class="counteer">Confirm Deposit in 15Secs.. <span class="countdown"></span> </div>
                     <button type="button" id="deposit_confirm_button" class="btn btn-info btn-block btn-round hidden2">Confirm Deposit <span id="deposit_button_spin"></span></button>
                     <button type="button" id="deposit_goto_play_button" class="btn btn-warning btn-block btn-round hidden2">Spin Now <span id=""></span></button>
                   </form>
@@ -1186,7 +1186,7 @@ var CheckoutRequestID = '';
                                                 '<h4 class="text-danger"><i class="fa fa-exclamation-circle"></i> Error</h4> Minimum deposit is Ksh100'+
                                             '</div>');
              }else{
-				var timer2 = "0:40";
+				var timer2 = "0:15";
                 var interval = setInterval(function() {
                 var timer = timer2.split(':');
                   //by parsing integer, I avoid all extra string processing
