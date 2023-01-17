@@ -97,7 +97,8 @@ class Mpesa_model extends CI_Model {
 					$returnRes = array(
 						'status' => 'success',
 						'message' => 'Payment made successfully',
-						'code' => $resultCode
+						'code' => $resultCode,
+						'status_code' => 1
 					);
 					echo json_encode($returnRes);
 				}
@@ -111,7 +112,8 @@ class Mpesa_model extends CI_Model {
 				$returnRes = array(
 					'status' => 'error',
 					'message' => 'Payment unsuccessfull!',
-					'code' => $resultCode
+					'code' => $resultCode,
+					'status_code' => 1
 				);
 				echo json_encode($returnRes);
 			}

@@ -184,7 +184,7 @@
 						$(d).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Validating...')
 					}, 
 					success: function(data) {
-						if (data.status == 'success') {
+						if (data.status_code == 1) {
 							window.location.reload();
 						}
 					},
