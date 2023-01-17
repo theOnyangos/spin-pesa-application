@@ -11,9 +11,10 @@ class Mpesa_payment extends CI_Controller {
 	private $passKey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
 	private $businessShortCode = 174379; // Can be the business store number
 	private $transactionType = "CustomerPayBillOnline";
-	private $callBackUrl ="https://90fc-197-237-202-136.eu.ngrok.io/spin-pessa/Mpesa_payment/stk_callback";
+	private $callBackUrl ="https://c627-197-237-202-136.eu.ngrok.io/spin-pessa/callback_data";
 	private $accountReference = "Spin Pesa";
 	private $transactionDesc = "Adding money to my wallet";
+	private $stkQueryEndpoint = "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query";
 	private $payments_table = "payments";
 
 	function __construct()
@@ -24,6 +25,10 @@ class Mpesa_payment extends CI_Controller {
 		$this->consumer_key = $this->config->item('consumer_key');
 		$this->consumer_secret = $this->config->item('consumer_secret');
 		$this->endpoint = $this->config->item('endpoint');
+	}
+
+	function index() {
+		echo $this->callBackUrl;
 	}
 
 	function get_mpesa_access_token()
@@ -38,13 +43,16 @@ class Mpesa_payment extends CI_Controller {
 
 	function initiate_stk_pusher() {
 		$token = $this->get_mpesa_access_token();
-		$amount = 1;
-		$customer_phone_number = "0725134449";
+		$amount = $this->input->post('amount');
+		$customer_phone_number = $this->input->post('phone_number');
+		// $amount = 1;
+		// $customer_phone_number = '0725134449';
 		$result = $this->push_stk($token, $customer_phone_number, $amount);
 		// Return response 
 		$response = [
 			'status' => 'success',
-			'message' => $result
+			'message' => $result['message'],
+			'CheckoutRequestID' => $result['CheckoutRequestID'],
 		];
 		echo json_encode($response);
 	}
@@ -89,7 +97,11 @@ class Mpesa_payment extends CI_Controller {
 				'customer_message' => "Requested",
 			);
 			$this->Mpesa_model->save_payment_details((array)$paymentData);
-			return $customerMessage;
+			$responseReturn = array(
+				'message' => $customerMessage,
+				'CheckoutRequestID' => $checkoutRequestID
+			);
+			return $responseReturn;
 		} else {
 			return "Request was unable to be completed";
 		}
@@ -98,11 +110,32 @@ class Mpesa_payment extends CI_Controller {
 	// get STK Callback after the payment has been processed from safaricom
 	function stk_callback() 
 	{
-		$data = json_decode(file_get_contents('php://input'), true);
-
-		$response = json_decode($data);
+		$data = file_get_contents("php://input");
+		$response = json_decode($data, true);
+		write_file(FCPATH.'public/file.txt', $response);
 		$this->Mpesa_model->update_payment_details($response);
 	}
+
+	// Check if the payment was successfull or not
+	public function validate_payment(){
+		$checkoutRequestID = $this->input->post('CheckoutRequestID');
+        $accessToken = $this->get_mpesa_access_token();
+        $BusinessShortCode = $this->businessShortCode;
+        $PassKey = $this->passKey;
+        $url = $this->stkQueryEndpoint;
+        $Timestamp = date('YmdHis');
+        $Password = base64_encode($BusinessShortCode.$PassKey.$Timestamp);
+        $CheckoutRequestID = $checkoutRequestID;
+        $payload = [
+            'BusinessShortCode' => $BusinessShortCode,
+            'Timestamp' => $Timestamp,
+            'Password' => $Password,
+            'CheckoutRequestID' => $CheckoutRequestID
+        ];
+		$response = $this->getCurlSetting($url, $payload, $accessToken);
+		$decRequest = json_decode($response, true);
+		$this->Mpesa_model->confirm_customer_payment($decRequest, $checkoutRequestID);
+    }
 
 	// Calculate the amount to update the client's wallet
 	function update_users_wallet($phone="0725134449", $amount=5) 

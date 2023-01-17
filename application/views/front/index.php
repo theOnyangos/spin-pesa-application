@@ -862,7 +862,7 @@ $phone = '';
 			</div>
 		</div>
 	<audio id="myAudio" controls style="visibility: hidden; height: 0px;">
-		<source src="audio.mp3" type="audio/mpeg">
+		<source src="media/audio.mp3" type="audio/mpeg">
 		Your browser does not support the audio element.
 	</audio><br>
 	</section>
@@ -988,6 +988,8 @@ $phone = '';
                     <form id="deposit_form">
                     <div class="form-group" style="margin-top:20px; margin-bottom:20px;">
                       <input type="text" class="form-control reg_form" id="cust_amount" name="amount" placeholder="Enter Amount">
+					  <input type="hidden" name="client_phone" value="<?= $phone ?>">
+					  <input type="hidden" name="deposit_url" value="<?= base_url('mpesa_payment/initiate_stk_pusher') ?>">
                       <span style="color: red;">Minimum Ksh 100</span>
                     </div>
                  
@@ -1167,24 +1169,26 @@ var CheckoutRequestID = '';
 			complete: function () { console.log("Initialized a grouploop with id: " + $(this).attr('id')) }
 		});
 		//==========================================================handle deposit=======================================================//
-		$("#deposit_proceed_button").click(function(event){
-		    event.preventDefault();
-		    $amount = $("#cust_amount").val();
-		  
-		    if(!$.isNumeric($amount)){
+		$('#deposit_proceed_button').click(function(e) {
+			e.preventDefault();
+			const amount = $("#cust_amount").val();
+			const phone = $("input[name=client_phone]").val();
+			const depositUrl = $("input[name=deposit_url]").val();
+
+			if(!$.isNumeric(amount)){
             	$("#output3").append('<div class="alert alert-danger">'+
                                                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">×</span> </button>'+
                                                 '<h4 class="text-danger"><i class="fa fa-exclamation-circle"></i> Error</h4> Incorrect Amount'+
                                             '</div>');
-             }else if($amount < 100){
+             }else if(amount < 1){
                  $("#output3").append('<div class="alert alert-danger">'+
                                                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">×</span> </button>'+
                                                 '<h4 class="text-danger"><i class="fa fa-exclamation-circle"></i> Error</h4> Minimum deposit is Ksh100'+
                                             '</div>');
              }else{
-            	var timer2 = "0:40";
+				var timer2 = "0:40";
                 var interval = setInterval(function() {
-                  var timer = timer2.split(':');
+                var timer = timer2.split(':');
                   //by parsing integer, I avoid all extra string processing
                   var minutes = parseInt(timer[0], 10);
                   var seconds = parseInt(timer[1], 10);
@@ -1206,28 +1210,28 @@ var CheckoutRequestID = '';
                   
                   timer2 = minutes + ':' + seconds;
                 }, 1000);
-            	//set iframe url
-            	$('#deposit_proceed_button').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending Mpesa Request to your phone...');
-            	url = "https://spin-pesa.com/mpesa/run2.php?name=<?php echo $user;?>&phone=<?php echo $phone;?>&amount="
-            	url = url+$amount;
-            	$.ajax(
-                  url,
-                  {
-                      success: function(data) {
-                        CheckoutRequestID = data;
-                        $('#depositModal').modal('hide');
-                        $('#deposit_proceed_button').html('Proceed');
-                        $('#confirmationModal').modal({backdrop: 'static', keyboard: false},'show');
-       
-                      },
-                      error: function() {
-                        alert('There was some error performing the Mpesa STK Push');
-                      }
-                   }
-                );
-             }
-
-		});
+				// Send data to the Server
+				 $.ajax({
+					 url: depositUrl,
+					 type: "POST",
+					 dataType: "JSON",
+					 data: { phone_number: phone, amount: amount},
+					 beforeSend: function() {
+						 $('#deposit_proceed_button').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending Mpesa Request to your phone...');
+					 },
+					 success: function(data) {
+						if (data.status == 'success') {
+							CheckoutRequestID = data.CheckoutRequestID;
+							$('#depositModal').modal('hide');
+							$('#deposit_proceed_button').html('Proceed');
+							$('#confirmationModal').modal({backdrop: 'static', keyboard: false},'show');
+						} else {
+							alert('There was some error performing the Mpesa STK Push');
+						}
+					 }
+				 })
+			 }
+		})
 		
 		//handle confirm deposit
 		$('#confirmationModal').on('hidden.bs.modal', function () {
@@ -1239,38 +1243,35 @@ var CheckoutRequestID = '';
         		
 		$("#deposit_confirm_button").click(function(event){
 		    event.preventDefault();
-
-        	//set iframe url
-        	$('#deposit_confirm_button').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Checking. Please wait...');
-        	url = "https://spin-pesa.com/mpesa/checkStatus.php?name=<?php echo $user;?>&phone=<?php echo $phone;?>&lastCheckoutRequestID="
-        	url = url+CheckoutRequestID;
-        	$.ajax(
-              url,
-              {
-                  success: function(data) {
-                      
-                     if(data == "done"){
-                         $('.deposit_confirm_text').html('<span style="color:green;">Balance Update successful</span>');
-                         $('#deposit_goto_play_button').removeClass("hidden2");
-                        
-                     }else{
-                         $('.deposit_confirm_text').html('<span style="color:red;"><b>Update unsuccessful</b></span>. Status received: '+data+'');
-                         //$('#deposit_goto_play_button').removeClass("hidden2");
-                          
-                     }
-                     
-                     $('#deposit_confirm_button').html('Check Again');
-
-                    
-                   
-   
-                  },
-                  error: function() {
-                    alert('There was some error performing check');
-                  }
-               }
-            );
-
+			// New Code 
+			const checkoutData = {
+				user_name: '<?= $user ?>',
+				phone: '<?= $phone ?>',
+				CheckoutRequestID: CheckoutRequestID
+			}
+			const url = '<?= site_url('mpesa_payment/validate_payment') ?>'
+			$.ajax({
+				url: url,
+				type: 'POST',
+				dataType: 'json',
+				data: checkoutData,
+				beforeSend: function() {
+					$('#deposit_confirm_button').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Checking. Please wait...');
+				},
+				success: function(data) {
+					if (data.status == 'success') {
+						$('.deposit_confirm_text').html('<span style="color:green;">Balance Update successful</span>');
+            			$('#deposit_goto_play_button').removeClass("hidden2");
+					} else { // There was an error
+						$('.deposit_confirm_text').html('<span style="color:red;"><b>Update unsuccessful</b></span>. Status received: '+data.code+'');
+            			$('#deposit_goto_play_button').removeClass("hidden2");
+					}
+					$('#deposit_confirm_button').html('Check Again');
+				},
+				error: function() {
+                	alert('There was some error performing check');
+            	}
+			})
 		});
 		
 		
