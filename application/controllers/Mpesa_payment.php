@@ -211,7 +211,7 @@ class Mpesa_payment extends CI_Controller {
 
 	function getAccessToken()
     {
-        $url = $this->endpoint;
+        $url = $this->token_endpoint;
         $curl = curl_init();
         curl_setopt_array($curl, array(
                 CURLOPT_URL => $url,
@@ -222,8 +222,8 @@ class Mpesa_payment extends CI_Controller {
                 CURLOPT_MAXREDIRS => 10,
                 CURLOPT_TIMEOUT => 30,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "POST",
-                CURLOPT_POSTFIELDS => "grant_type=client_credentials&client_id=$this->consumer_key&client_secret=$this->consumer_secret&scope=read write",
+				CURLOPT_POST => 1,
+                CURLOPT_POSTFIELDS => "key=$this->consumer_key&secret=$this->consumer_secret",
                 CURLOPT_HTTPHEADER => array(
                   "content-type: application/x-www-form-urlencoded"
 				),
@@ -231,6 +231,7 @@ class Mpesa_payment extends CI_Controller {
     
         $response = curl_exec($curl);
         $error = curl_error($curl);
-        return json_decode($response)->access_token;
+        $finalRes = json_decode($response);
+		echo json_encode($finalRes);
     }
 }

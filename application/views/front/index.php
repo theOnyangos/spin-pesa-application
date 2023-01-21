@@ -9,6 +9,7 @@ $phone = '';
     //if(!isset($_GET['dev'])){
        // die("Website under Maintenance. Try later");
     //} 
+	
 ?>
 <!doctype html>
 <html lang="en">
@@ -267,6 +268,7 @@ $phone = '';
 	</style>
 </head>
 <body>
+
 	<!-- back to top start -->
 	<div id="back-top-btn">
 		<i class="fa fa-chevron-up"></i>
@@ -1070,7 +1072,7 @@ $phone = '';
         </div>
     </div>
     <!-- pesapal Modal End -->
-	
+
 	<!-- jQuery -->
 	<script src="<?php echo base_url('assets/front/');?>js/jquery-3.2.1.min.js"></script>
 
@@ -1101,11 +1103,8 @@ $phone = '';
 	<script src="<?php echo base_url('assets/front/');?>wheel/js/sweetalert2.min.js?ghj"></script> 
 	<script src="<?php echo base_url('assets/front/');?>wheel/js/randomColor.js"></script>
     <script src="<?php echo base_url('assets/front/');?>wheel/js/confettiKit.js"></script>
-	<?php
-
-        if(isset($_SESSION['logged_in_user'])){
-            ?>
-    <script src="<?php echo base_url('assets/front/');?>wheel/js/main.js?<?php echo md5(uniqid(rand(), true)); ?>"></script> 
+	<?php if(isset($_SESSION['logged_in_user'])){ ?>
+    <script src="<?php echo base_url('');?>assets/front/wheel/js/main.js?<?php echo md5(uniqid(rand(), true)); ?>"></script> 
            <?php
         }else{
             ?>
