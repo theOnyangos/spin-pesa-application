@@ -4,6 +4,7 @@ class Mpesa_model extends CI_Model {
 	private $payments_table = 'payments';
 	private $clients_table = 'clients';
 	private $mpesa_settings_table = 'mpesa_settings';
+	private $offline_payments_table = 'offline_payments';
 
 	function save_payment_details($paymentData) {
 		$this->db->insert($this->payments_table, $paymentData);
@@ -142,5 +143,44 @@ class Mpesa_model extends CI_Model {
 		$this->db->update($this->mpesa_settings_table, $payloadData);
 		return true;
 
+	}
+
+	function save_confirmation_data($payload)
+	{
+		// Save data to the database
+        $TransactionType = $payload['TransactionType'];
+        $TransID = $payload['TransID'];
+        $TransTime = $payload['TransTime'];
+        $TransAmount = $payload['TransAmount'];
+        $BusinessShortCode = $payload['BusinessShortCode'];
+        $BillRefNumber = $payload['BillRefNumber'];
+        $InvoiceNumbe = $payload['InvoiceNumber'];
+        $OrgAccountBalance = $payload['OrgAccountBalance'];
+        $ThirdPartyTransID = $payload['ThirdPartyTransID'];
+        $MSISDN = $payload['MSISDN'];
+        $FirstName = $payload['FirstName'];
+        $MiddleName =$payload['MiddleName'];
+        $LastName = $payload['LastName'];
+
+        $C2bData = array();
+        $C2bData['TransactionType'] = $TransactionType;
+        $C2bData['TransID'] = $TransID;
+        $C2bData['TransTime'] = $TransTime;
+        $C2bData['TransAmount'] = $TransAmount;
+        $C2bData['BusinessShortCode'] = $BusinessShortCode;
+        $C2bData['BillRefNumber'] = $BillRefNumber;
+        $C2bData['InvoiceNumbe'] = $InvoiceNumbe;
+        $C2bData['OrgAccountBalance'] = $OrgAccountBalance;
+        $C2bData['ThirdPartyTransID'] = $ThirdPartyTransID;
+        $C2bData['MSISDN'] = $MSISDN;
+        $C2bData['FirstName'] = $FirstName;
+        $C2bData['MiddleName'] = $MiddleName;
+        $C2bData['LastName'] = $LastName;
+        $this->db->insert($this->offline_payments_table, $C2bData);
+
+        return array(
+            'ResultCode' => 0,
+            'ResultDescription' => 'Accepted'
+        );
 	}
 }

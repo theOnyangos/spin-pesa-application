@@ -16,7 +16,7 @@ class Mpesa_payment extends CI_Controller {
 	private $callBackUrl ="https://spinpesa.programmer.co.ke/callback_response";
 	private $accountReference;
 	private $transactionDesc = "Adding money to my wallet";
-	private $stkQueryEndpoint = "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query";
+	private $stkQueryEndpoint = "https://d599-197-237-202-136.eu.ngrok.io/mpesa/stkpushquery/v1/query";
 	private $payments_table = "payments";
 
 	function __construct()
@@ -152,10 +152,84 @@ class Mpesa_payment extends CI_Controller {
     }
 
 	// Calculate the amount to update the client's wallet
-	function update_users_wallet($phone="0725134449", $amount=5) 
+	function update_users_wallet($phone="0725134449", $amount=0) 
 	{
 		$this->Mpesa_model->culculate_amount($phone, $amount);
 	}
+
+	// Register url method
+	function register_url() 
+	{
+		$accessToken = $this->get_mpesa_access_token();
+        $url = "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl";
+        $shortCode = 600247;
+        $responseType = "Completed";
+        $confirmationUrl = 'https://d599-197-237-202-136.eu.ngrok.io/payments/confirmation';
+        $validationUrl = 'https://d599-197-237-202-136.eu.ngrok.io/payments/validation';
+
+		$payloadData = array(
+			'ShortCode' => $shortCode,
+            'ResponseType' => $responseType,
+            'ConfirmationURL' => $confirmationUrl,
+            'ValidationURL' => $validationUrl
+		);
+		$response = $this->getCurlSetting($url, $payloadData, $accessToken);
+
+        return $response;
+	}
+
+	// Safaricom Validation methods
+	function validation()
+    {
+        $data = file_get_contents("php://input");
+        write_file(FCPATH.'public/validation.txt', $data);
+
+        // Validation logic
+		// Success message
+        return json_encode([
+            'ResultCode' => 0,
+            'ResultDescription' => 'Accepted'
+        ]);
+
+        // Rejected Response
+        // return response()->json([
+        //     'Resultode' => 'C2B00011',
+        //     'ResultDescription' => 'Rejected'
+        // ]);
+    }
+
+	// Handling Offline payment and online payment by customer
+    function simulation() {
+        $accessToken = $this->get_mpesa_access_token();
+        $url = "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate";
+        $shortCode = 600247;
+        $commandID = "CustomerPayBillOnline"; // CustomerBuyGoodsOnline
+        $amount = 1;
+        $msisdn = 254708374149;
+        $billRefNumber = "00000"; //
+
+		$payloadData = array(
+			'ShortCode' => $shortCode,
+            'CommandID' => $commandID,
+            'Amount' => $amount,
+            'Msisdn' => $msisdn,
+            'BillRefNumber' => $billRefNumber
+		);
+
+        // Make a request to safaricom
+		$response = $this->getCurlSetting($url, $payloadData, $accessToken);
+
+        return $response;
+    }
+
+	public function confirmation()
+    {
+        $data = file_get_contents("php://input");
+        Storage::disk('local')->put('confirmation.txt', $data);
+
+        $response = json_decode($data, true);
+		$this->Mpesa_model->save_confirmation_data($response);
+    }
 
 	function generate_transaction_number()
     {
@@ -209,29 +283,23 @@ class Mpesa_payment extends CI_Controller {
 		}
 	}
 
-	function getAccessToken()
-    {
-        $url = $this->token_endpoint;
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-                CURLOPT_URL => $url,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_SSL_VERIFYHOST =>false,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-				CURLOPT_POST => 1,
-                CURLOPT_POSTFIELDS => "key=$this->consumer_key&secret=$this->consumer_secret",
-                CURLOPT_HTTPHEADER => array(
-                  "content-type: application/x-www-form-urlencoded"
-				),
-		));
-    
-        $response = curl_exec($curl);
-        $error = curl_error($curl);
-        $finalRes = json_decode($response);
-		echo json_encode($finalRes);
-    }
+	public function get_mpesa_access_token_2()
+	{
+		$url = $this->token_endpoint;
+ 
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_URL, $url);
+		$credentials = base64_encode($this->consumer_key.':'.$this->consumer_secret);
+ 
+	   //setting a custom header      
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Basic '.$credentials)); //setting a custom header
+		curl_setopt($curl, CURLOPT_HEADER, false);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+		
+		$curl_response = curl_exec($curl);
+ 
+		return json_decode($curl_response)->access_token;       
+	 }
+
 }
